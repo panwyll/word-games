@@ -2,57 +2,58 @@ import { DICTIONARY } from './dictionary';
 import { seededRng, seededShuffle, getDailySeed } from './daily';
 import type { SpellingBeePuzzle } from '@/types/games';
 
-// Letters that make for good Spelling Bee puzzles (avoid J, K, Q, V, X, Z for center)
-const GOOD_CENTER = 'ABCDEGHILMNOPRSTUW'.split('');
-const GOOD_OUTER = 'ABCDEGHILMNOPRSTUW'.split('');
+/**
+ * Pangram-first approach: start from words in the dictionary that have exactly
+ * 7 unique letters. Each such word guarantees at least one pangram exists for
+ * that letter set, and the algorithm tries every possible center letter to find
+ * the configuration with the most valid words (≥15 required).
+ */
+
+// Pre-compute all words with exactly 7 distinct letters (pangram seed candidates).
+const PANGRAM_SEEDS = DICTIONARY.filter(word => new Set(word.split('')).size === 7);
 
 export function generateSpellingBeePuzzle(seed: number): SpellingBeePuzzle {
-  // Try many seeds until we find a puzzle meeting quality thresholds
-  for (let attempt = 0; attempt < 500; attempt++) {
-    // Pick 7 distinct letters
-    const centerPool = seededShuffle(GOOD_CENTER, seededRng(seed + attempt * 37 + 1));
-    const center = centerPool[0];
+  // Deterministically shuffle the pangram seed words using the daily seed.
+  const shuffledSeeds = seededShuffle(PANGRAM_SEEDS, seededRng(seed));
 
-    const outerPool = seededShuffle(
-      GOOD_OUTER.filter(l => l !== center),
-      seededRng(seed + attempt * 37 + 2)
-    );
-    const outer = outerPool.slice(0, 6);
-    const allLetters = new Set([center, ...outer]);
+  for (const pangramSeed of shuffledSeeds) {
+    const letters = Array.from(new Set(pangramSeed.split('')));
 
-    // Find valid words: ≥4 letters, only uses the 7 letters, includes center
-    const validWords = DICTIONARY.filter(word => {
-      if (word.length < 4) return false;
-      if (!word.includes(center)) return false;
-      return word.split('').every(ch => allLetters.has(ch));
-    });
+    // Try each of the 7 letters as the center (in a seeded random order).
+    const centers = seededShuffle(letters, seededRng(seed + pangramSeed.charCodeAt(0)));
 
-    // Find pangrams: words that use all 7 letters at least once
-    const pangrams = validWords.filter(word => {
-      const wordSet = new Set(word.split(''));
-      return Array.from(allLetters).every(l => wordSet.has(l));
-    });
+    for (const center of centers) {
+      const allLetters = new Set(letters);
 
-    // Quality check: at least 15 valid words, at least 1 pangram
-    if (validWords.length >= 15 && pangrams.length >= 1) {
-      return {
-        centerLetter: center,
-        outerLetters: outer,
-        validWords,
-        pangrams,
-      };
+      const validWords = DICTIONARY.filter(word => {
+        if (word.length < 4 || !word.includes(center)) return false;
+        return word.split('').every(ch => allLetters.has(ch));
+      });
+
+      // Quality check: at least 15 valid words (pangram guaranteed by construction).
+      if (validWords.length >= 15) {
+        const pangrams = validWords.filter(word => {
+          const ws = new Set(word.split(''));
+          return letters.every(l => ws.has(l));
+        });
+        return {
+          centerLetter: center,
+          outerLetters: letters.filter(l => l !== center),
+          validWords,
+          pangrams,
+        };
+      }
     }
   }
 
-  // Absolute fallback (should rarely/never be reached with a large enough dictionary)
-  return hardcodedFallback();
+  // Absolute fallback — only reached if the entire dictionary yields no valid puzzle.
+  return buildFallback();
 }
 
-/** Used only if the algorithm cannot find a valid puzzle after 500 attempts. */
-function hardcodedFallback(): SpellingBeePuzzle {
-  // T is center, using letters T,R,A,I,N,E,S — a very well-known valid set
-  const center = 'T';
-  const outer = ['R', 'A', 'I', 'N', 'E', 'S'];
+/** Build puzzle from letters A,E,I,L,M,N,T — a very productive letter set. */
+function buildFallback(): SpellingBeePuzzle {
+  const center = 'E';
+  const outer = ['A', 'I', 'L', 'M', 'N', 'T'];
   const allLetters = new Set([center, ...outer]);
   const validWords = DICTIONARY.filter(word => {
     if (word.length < 4 || !word.includes(center)) return false;
