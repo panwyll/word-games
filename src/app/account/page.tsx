@@ -12,7 +12,7 @@ function AccountContent() {
   const [portalLoading, setPortalLoading] = useState(false);
   const [upgradeLoading, setUpgradeLoading] = useState(false);
 
-  const tier = (session?.user as any)?.tier ?? 'free';
+  const tier = session?.user?.tier ?? 'free';
   const isPremium = tier === 'premium';
 
   async function openPortal() {

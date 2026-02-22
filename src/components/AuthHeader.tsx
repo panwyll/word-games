@@ -19,7 +19,7 @@ export default function AuthHeader() {
     );
   }
 
-  const tier = (session.user as any).tier;
+  const tier = session.user.tier;
   const isPremium = tier === 'premium';
 
   return (

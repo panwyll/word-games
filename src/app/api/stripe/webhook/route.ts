@@ -39,6 +39,7 @@ export async function POST(req: NextRequest) {
       const sub = event.data.object as Stripe.Subscription;
       const status = sub.status;
       const tier = status === 'active' || status === 'trialing' ? 'premium' : 'free';
+      // Store the period end so we know when access expires even after cancellation.
       const subscriptionEnd = sub.current_period_end
         ? new Date(sub.current_period_end * 1000)
         : null;

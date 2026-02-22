@@ -9,7 +9,7 @@ interface PremiumGateProps {
 
 export default function PremiumGate({ children }: PremiumGateProps) {
   const { data: session, status } = useSession();
-  const isPremium = (session?.user as any)?.tier === 'premium';
+  const isPremium = session?.user?.tier === 'premium';
 
   if (status === 'loading') {
     return (

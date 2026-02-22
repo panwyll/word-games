@@ -14,5 +14,6 @@ declare module 'next-auth/jwt' {
   interface JWT extends DefaultJWT {
     id: string;
     tier: 'free' | 'premium';
+    tierRefreshedAt?: number;
   }
 }

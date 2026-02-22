@@ -30,19 +30,26 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        token.tier = (user as any).tier;
+        token.tier = user.tier;
       }
-      // Refresh tier from DB on each session check so upgrades take effect immediately
-      if (token.id) {
-        const dbUser = await prisma.user.findUnique({ where: { id: token.id as string } });
-        if (dbUser) token.tier = dbUser.tier as 'free' | 'premium';
+      // Refresh tier from DB at most every 5 minutes so upgrades take effect promptly
+      // without hammering the database on every request.
+      const FIVE_MINUTES = 5 * 60;
+      const now = Math.floor(Date.now() / 1000);
+      const lastRefresh = (token.tierRefreshedAt as number | undefined) ?? 0;
+      if (token.id && now - lastRefresh > FIVE_MINUTES) {
+        const dbUser = await prisma.user.findUnique({ where: { id: token.id } });
+        if (dbUser) {
+          token.tier = dbUser.tier as 'free' | 'premium';
+          token.tierRefreshedAt = now;
+        }
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
-        session.user.id = token.id as string;
-        (session.user as any).tier = token.tier as string;
+        session.user.id = token.id;
+        session.user.tier = token.tier;
       }
       return session;
     },

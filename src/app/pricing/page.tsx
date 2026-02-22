@@ -22,7 +22,7 @@ const PREMIUM_FEATURES = [
 
 export default function PricingPage() {
   const { data: session } = useSession();
-  const isPremium = (session?.user as any)?.tier === 'premium';
+  const isPremium = session?.user?.tier === 'premium';
   const [loading, setLoading] = useState(false);
 
   async function handleUpgrade() {
