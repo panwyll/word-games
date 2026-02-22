@@ -3,8 +3,7 @@
 import { useState } from 'react';
 import ConnectionsGrid from './ConnectionsGrid';
 import type { ConnectionsPuzzle } from '@/types/games';
-import { CONNECTIONS_PUZZLES } from '@/lib/connections-puzzles';
-import { getDailyIndex } from '@/lib/daily';
+import { getDailyConnectionsPuzzle } from '@/lib/connections-engine';
 
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -16,7 +15,7 @@ function shuffle<T>(arr: T[]): T[] {
 }
 
 export default function ConnectionsGame() {
-  const puzzle: ConnectionsPuzzle = CONNECTIONS_PUZZLES[getDailyIndex(CONNECTIONS_PUZZLES.length)];
+  const puzzle: ConnectionsPuzzle = getDailyConnectionsPuzzle();
   const allWords = puzzle.categories.flatMap(c => c.words);
 
   const [words, setWords] = useState(() => shuffle(allWords));
