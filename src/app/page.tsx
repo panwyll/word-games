@@ -1,4 +1,5 @@
 import GameCard from '@/components/GameCard';
+import Link from 'next/link';
 
 export default function Home() {
   return (
@@ -6,6 +7,12 @@ export default function Home() {
       <div className="text-center mb-12">
         <h1 className="text-4xl font-bold mb-3">Word Games</h1>
         <p className="text-gray-500 text-lg">Daily word puzzles. A new challenge every day.</p>
+        <p className="text-sm text-gray-400 mt-2">
+          Free daily puzzles ·{' '}
+          <Link href="/pricing" className="text-yellow-600 dark:text-yellow-400 hover:underline font-medium">
+            Unlock the full archive with Premium →
+          </Link>
+        </p>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         <GameCard

@@ -24,8 +24,8 @@ function getRank(score: number, maxScore: number): string {
   return 'Beginner';
 }
 
-export default function SpellingBeeGame() {
-  const puzzle: SpellingBeePuzzle = getDailySpellingBeePuzzle();
+export default function SpellingBeeGame({ overridePuzzle }: { overridePuzzle?: SpellingBeePuzzle } = {}) {
+  const puzzle: SpellingBeePuzzle = overridePuzzle ?? getDailySpellingBeePuzzle();
   const allLetters = useMemo(
     () => new Set([puzzle.centerLetter.toUpperCase(), ...puzzle.outerLetters.map(l => l.toUpperCase())]),
     [puzzle.centerLetter, puzzle.outerLetters]

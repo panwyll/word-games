@@ -11,8 +11,8 @@ import { getDailyIndex } from '@/lib/daily';
 const WORD_LENGTH = 5;
 const MAX_GUESSES = 6;
 
-export default function WordleGame() {
-  const answer = VALID_ANSWERS[getDailyIndex(VALID_ANSWERS.length)].toUpperCase();
+export default function WordleGame({ overrideAnswer }: { overrideAnswer?: string } = {}) {
+  const answer = (overrideAnswer ?? VALID_ANSWERS[getDailyIndex(VALID_ANSWERS.length)]).toUpperCase();
   const [guesses, setGuesses] = useState<WordleGuess[]>([]);
   const [currentGuess, setCurrentGuess] = useState('');
   const [gameOver, setGameOver] = useState(false);

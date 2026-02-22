@@ -14,8 +14,8 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
-export default function ConnectionsGame() {
-  const puzzle: ConnectionsPuzzle = getDailyConnectionsPuzzle();
+export default function ConnectionsGame({ overridePuzzle }: { overridePuzzle?: ConnectionsPuzzle } = {}) {
+  const puzzle: ConnectionsPuzzle = overridePuzzle ?? getDailyConnectionsPuzzle();
   const allWords = puzzle.categories.flatMap(c => c.words);
 
   const [words, setWords] = useState(() => shuffle(allWords));
