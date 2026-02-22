@@ -3,17 +3,21 @@
 import { useState } from 'react';
 import { getDailySeed } from '@/lib/daily';
 import { generateSpellingBeePuzzle } from '@/lib/spelling-bee-engine';
+import type { SpellingBeePuzzle } from '@/types/games';
 import SpellingBeeGame from './SpellingBeeGame';
 
 const ARCHIVE_DAYS = 7;
+
+function getArchivePuzzle(seed: number, offset: number): SpellingBeePuzzle {
+  return generateSpellingBeePuzzle(seed - offset);
+}
 
 export default function SpellingBeeArchive() {
   const seed = getDailySeed();
   const [selectedOffset, setSelectedOffset] = useState<number | null>(null);
 
   if (selectedOffset !== null) {
-    const targetSeed = seed - selectedOffset;
-    const puzzle = generateSpellingBeePuzzle(targetSeed);
+    const puzzle = getArchivePuzzle(seed, selectedOffset);
     const date = new Date();
     date.setDate(date.getDate() - selectedOffset);
     return (
@@ -36,8 +40,7 @@ export default function SpellingBeeArchive() {
     <div className="space-y-2">
       {Array.from({ length: ARCHIVE_DAYS }, (_, i) => {
         const offset = i + 1;
-        const targetSeed = seed - offset;
-        const puzzle = generateSpellingBeePuzzle(targetSeed);
+        const puzzle = getArchivePuzzle(seed, offset);
         const date = new Date();
         date.setDate(date.getDate() - offset);
         return (

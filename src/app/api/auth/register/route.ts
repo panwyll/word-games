@@ -20,7 +20,8 @@ export async function POST(req: NextRequest) {
       data: { email, passwordHash, name: name || null },
     });
     return NextResponse.json({ id: user.id, email: user.email });
-  } catch {
+  } catch (err) {
+    console.error('[register] error:', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

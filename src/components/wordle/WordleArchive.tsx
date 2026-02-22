@@ -7,13 +7,17 @@ import WordleGame from './WordleGame';
 
 const ARCHIVE_DAYS = 7;
 
+function getArchiveAnswer(seed: number, offset: number): string {
+  const targetSeed = seed - offset;
+  return VALID_ANSWERS[((targetSeed % VALID_ANSWERS.length) + VALID_ANSWERS.length) % VALID_ANSWERS.length];
+}
+
 export default function WordleArchive() {
   const seed = getDailySeed();
   const [selectedOffset, setSelectedOffset] = useState<number | null>(null);
 
   if (selectedOffset !== null) {
-    const targetSeed = seed - selectedOffset;
-    const answer = VALID_ANSWERS[((targetSeed % VALID_ANSWERS.length) + VALID_ANSWERS.length) % VALID_ANSWERS.length];
+    const answer = getArchiveAnswer(seed, selectedOffset);
     const date = new Date();
     date.setDate(date.getDate() - selectedOffset);
     return (
@@ -36,8 +40,7 @@ export default function WordleArchive() {
     <div className="space-y-2">
       {Array.from({ length: ARCHIVE_DAYS }, (_, i) => {
         const offset = i + 1;
-        const targetSeed = seed - offset;
-        const answer = VALID_ANSWERS[((targetSeed % VALID_ANSWERS.length) + VALID_ANSWERS.length) % VALID_ANSWERS.length];
+        const answer = getArchiveAnswer(seed, offset);
         const date = new Date();
         date.setDate(date.getDate() - offset);
         return (
