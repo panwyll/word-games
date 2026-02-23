@@ -1,2 +1,23 @@
-npx next lint
-npx tsc --noEmit --skipLibCheck
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🔍 Running pre-commit checks..."
+
+# Lint
+echo "📋 Linting..."
+npx next lint || exit 1
+
+# Type check
+echo "🔍 Type checking..."
+npx tsc --noEmit --skipLibCheck || exit 1
+
+# Build check (verifies Vercel will build successfully)
+echo "🏗️  Building project to verify Vercel compatibility..."
+npm run build || {
+  echo "❌ Build failed! Fix the errors before committing."
+  echo "This ensures Vercel will build successfully."
+  exit 1
+}
+
+echo "✅ All pre-commit checks passed!"
+

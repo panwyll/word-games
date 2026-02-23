@@ -108,6 +108,28 @@ npm run lint         # Run ESLint
 npm run test:e2e     # Run Playwright tests
 ```
 
+## Development Workflow
+
+### Pre-commit Checks
+
+This project uses [Husky](https://typicode.github.io/husky/) to run automatic checks before each commit:
+
+- **Linting**: Ensures code style consistency
+- **Type checking**: Catches TypeScript errors
+- **Build verification**: Ensures Vercel will build successfully
+
+These checks prevent broken builds from being pushed. If a check fails, fix the errors before committing.
+
+### Continuous Integration
+
+GitHub Actions runs the same checks on every pull request:
+- ✅ Linting
+- ✅ Type checking  
+- ✅ Build verification
+- ✅ End-to-end tests
+
+PRs cannot be merged until all CI checks pass, ensuring Vercel deployments succeed.
+
 ## Tech Stack
 
 - **Framework**: Next.js 15 (App Router)
