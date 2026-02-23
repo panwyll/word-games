@@ -6,9 +6,8 @@
 
 > **Do not request a review until every box is checked.**
 
-- [ ] `Build (Vercel mirror)` CI check is ✅ green (Settings → Branch protection → required status check)
+- [ ] **Vercel deployment check is ✅ successful** — check the "Vercel" status on this PR's commit (posted automatically by the Vercel GitHub app). This is the canonical build gate; do not request review if it is failing or pending.
 - [ ] `E2E tests (Playwright)` CI check is ✅ green
-- [ ] Vercel preview deployment is ✅ successful
 - [ ] No TypeScript errors (`npx tsc --noEmit --skipLibCheck`)
 - [ ] No lint errors (`npm run lint`)
 - [ ] Self-reviewed the diff

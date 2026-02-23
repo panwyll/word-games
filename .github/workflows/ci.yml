@@ -6,14 +6,17 @@ on:
   pull_request:
     branches: [main]
 
+# The build gate is enforced by the real Vercel deployment check, which the
+# Vercel GitHub app posts on every PR commit.  Set "Vercel" (or the deployment
+# check name shown in your PR) as a *required status check* in
+# Settings → Branches → Branch protection rules.
+#
+# This workflow only runs the E2E test suite, which builds the app itself via
+# the Playwright webServer config.
+
 jobs:
-  # ── Job 1: Build ────────────────────────────────────────────────────────────
-  # This job mirrors the Vercel build exactly (npm ci → lint → type-check →
-  # next build).  It is intentionally kept separate so it can be set as a
-  # *required status check* in branch-protection settings, ensuring no PR can
-  # be reviewed or merged until the build is green.
-  build:
-    name: Build (Vercel mirror)
+  e2e:
+    name: E2E tests (Playwright)
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -34,30 +37,6 @@ jobs:
 
       - name: Type check
         run: npx tsc --noEmit --skipLibCheck
-
-      - name: Build
-        run: npm run build
-
-  # ── Job 2: E2E tests ─────────────────────────────────────────────────────────
-  # Only runs after the build job passes, so screenshots and test artifacts are
-  # never produced for a broken build.
-  e2e:
-    name: E2E tests (Playwright)
-    needs: build
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
