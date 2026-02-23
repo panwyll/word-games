@@ -3,7 +3,7 @@
 import { useSession } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { useState, Suspense } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 
 function AccountContent() {
   const { data: session } = useSession();
@@ -11,14 +11,35 @@ function AccountContent() {
   const upgraded = params.get('upgraded') === 'true';
   const [portalLoading, setPortalLoading] = useState(false);
   const [upgradeLoading, setUpgradeLoading] = useState(false);
+  const [stripeDisabled, setStripeDisabled] = useState(false);
 
   const tier = session?.user?.tier ?? 'free';
   const isPremium = tier === 'premium';
+
+  useEffect(() => {
+    // Check if Stripe is available on mount
+    async function checkStripe() {
+      try {
+        const res = await fetch('/api/stripe/checkout', { method: 'HEAD' });
+        setStripeDisabled(res.status === 503);
+      } catch {
+        setStripeDisabled(true);
+      }
+    }
+    checkStripe();
+  }, []);
 
   async function openPortal() {
     setPortalLoading(true);
     const res = await fetch('/api/stripe/portal', { method: 'POST' });
     const data = await res.json();
+    
+    if (res.status === 503) {
+      alert(data.message || 'Billing portal is not available in this environment.');
+      setPortalLoading(false);
+      return;
+    }
+    
     if (data.url) window.location.href = data.url;
     else setPortalLoading(false);
   }
@@ -27,6 +48,13 @@ function AccountContent() {
     setUpgradeLoading(true);
     const res = await fetch('/api/stripe/checkout', { method: 'POST' });
     const data = await res.json();
+    
+    if (res.status === 503) {
+      alert(data.message || 'Payment processing is not available in this environment.');
+      setUpgradeLoading(false);
+      return;
+    }
+    
     if (data.url) window.location.href = data.url;
     else setUpgradeLoading(false);
   }
@@ -38,6 +66,12 @@ function AccountContent() {
       {upgraded && (
         <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-300 rounded-xl" role="alert">
           🎉 Welcome to Premium! All puzzles are now unlocked.
+        </div>
+      )}
+
+      {stripeDisabled && (
+        <div className="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 text-yellow-800 dark:text-yellow-300 rounded-xl text-sm">
+          ℹ️ Payment processing is not configured in this environment. All features are available for testing.
         </div>
       )}
 
@@ -72,7 +106,11 @@ function AccountContent() {
               </span>
             )}
           </div>
-          {isPremium ? (
+          {stripeDisabled ? (
+            <div className="text-center py-2.5 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 rounded-full text-sm font-medium">
+              Payments Not Available
+            </div>
+          ) : isPremium ? (
             <button
               onClick={openPortal}
               disabled={portalLoading}
