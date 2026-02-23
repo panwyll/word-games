@@ -10,6 +10,14 @@ test.describe('Spelling Bee Game', () => {
     await expect(cells.first()).toBeVisible();
   });
 
+  test('hive layout screenshot', async ({ page }) => {
+    // Wait for the hive to fully render before capturing
+    // Screenshots are auto-captured via `screenshot: 'on'` in playwright.config.ts;
+    // this test explicitly captures one for easy review in CI artifacts.
+    await expect(page.locator('button[aria-label]').first()).toBeVisible();
+    await page.screenshot({ fullPage: false });
+  });
+
   test('shows score', async ({ page }) => {
     await expect(page.getByText(/score:/i)).toBeVisible();
   });
