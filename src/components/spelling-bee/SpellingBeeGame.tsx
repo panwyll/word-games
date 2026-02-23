@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import SpellingBeeHive from './SpellingBeeHive';
 import type { SpellingBeePuzzle } from '@/types/games';
 import { getDailySpellingBeePuzzle } from '@/lib/spelling-bee-engine';
+import { readDailyCache, writeDailyCache } from '@/lib/cache';
 
 function getScore(word: string, isPangram: boolean): number {
   if (word.length === 4) return 1;
@@ -24,8 +25,14 @@ function getRank(score: number, maxScore: number): string {
   return 'Beginner';
 }
 
+interface SpellingBeeCacheState {
+  found: string[];
+  score: number;
+}
+
 export default function SpellingBeeGame({ overridePuzzle }: { overridePuzzle?: SpellingBeePuzzle } = {}) {
   const puzzle: SpellingBeePuzzle = overridePuzzle ?? getDailySpellingBeePuzzle();
+  const isDaily = !overridePuzzle;
   const allLetters = useMemo(
     () => new Set([puzzle.centerLetter.toUpperCase(), ...puzzle.outerLetters.map(l => l.toUpperCase())]),
     [puzzle.centerLetter, puzzle.outerLetters]
@@ -35,6 +42,22 @@ export default function SpellingBeeGame({ overridePuzzle }: { overridePuzzle?: S
   const [found, setFound] = useState<string[]>([]);
   const [message, setMessage] = useState('');
   const [score, setScore] = useState(0);
+
+  useEffect(() => {
+    if (isDaily) {
+      const cached = readDailyCache<SpellingBeeCacheState>('spelling-bee');
+      if (cached) {
+        setFound(cached.found);
+        setScore(cached.score);
+      }
+    }
+  }, [isDaily]);
+
+  useEffect(() => {
+    if (isDaily && found.length > 0) {
+      writeDailyCache<SpellingBeeCacheState>('spelling-bee', { found, score });
+    }
+  }, [isDaily, found, score]);
 
   const maxScore = puzzle.validWords.reduce((acc, word) => {
     const isPangram = puzzle.pangrams.map(p => p.toUpperCase()).includes(word.toUpperCase());

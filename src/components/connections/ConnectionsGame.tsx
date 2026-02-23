@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import ConnectionsGrid from './ConnectionsGrid';
 import type { ConnectionsPuzzle } from '@/types/games';
 import { getDailyConnectionsPuzzle } from '@/lib/connections-engine';
+import { readDailyCache, writeDailyCache } from '@/lib/cache';
 
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -14,8 +15,16 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
+interface ConnectionsCacheState {
+  solvedTitles: string[];
+  mistakes: number;
+  gameOver: boolean;
+  won: boolean;
+}
+
 export default function ConnectionsGame({ overridePuzzle }: { overridePuzzle?: ConnectionsPuzzle } = {}) {
   const puzzle: ConnectionsPuzzle = overridePuzzle ?? getDailyConnectionsPuzzle();
+  const isDaily = !overridePuzzle;
   const allWords = puzzle.categories.flatMap(c => c.words);
 
   const [words, setWords] = useState(() => shuffle(allWords));
@@ -25,6 +34,21 @@ export default function ConnectionsGame({ overridePuzzle }: { overridePuzzle?: C
   const [message, setMessage] = useState('');
   const [gameOver, setGameOver] = useState(false);
   const [won, setWon] = useState(false);
+
+  useEffect(() => {
+    if (isDaily) {
+      const cached = readDailyCache<ConnectionsCacheState>('connections');
+      if (cached) {
+        const solvedCats = puzzle.categories.filter(c => cached.solvedTitles.includes(c.title));
+        setSolved(solvedCats);
+        setMistakes(cached.mistakes);
+        setGameOver(cached.gameOver);
+        setWon(cached.won);
+      }
+    }
+    // puzzle.categories is stable for the lifetime of the component (daily puzzle doesn't change mid-session)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isDaily]);
 
   const solvedWords = solved.flatMap(s => s.words);
   const remaining = words.filter(w => !solvedWords.includes(w));
@@ -60,8 +84,10 @@ export default function ConnectionsGame({ overridePuzzle }: { overridePuzzle?: C
       if (newSolved.length === puzzle.categories.length) {
         setWon(true);
         setGameOver(true);
+        if (isDaily) writeDailyCache<ConnectionsCacheState>('connections', { solvedTitles: newSolved.map(s => s.title), mistakes, gameOver: true, won: true });
         showMessage('🎉 Brilliant! You found all the connections!', 5000);
       } else {
+        if (isDaily) writeDailyCache<ConnectionsCacheState>('connections', { solvedTitles: newSolved.map(s => s.title), mistakes, gameOver: false, won: false });
         showMessage('✅ Correct!');
       }
     } else {
@@ -73,7 +99,10 @@ export default function ConnectionsGame({ overridePuzzle }: { overridePuzzle?: C
       showMessage(oneAway ? 'One away...' : 'Not quite!');
       if (newMistakes >= 4) {
         setGameOver(true);
+        if (isDaily) writeDailyCache<ConnectionsCacheState>('connections', { solvedTitles: solved.map(s => s.title), mistakes: newMistakes, gameOver: true, won: false });
         showMessage('Game over! Better luck next time.', 5000);
+      } else if (isDaily) {
+        writeDailyCache<ConnectionsCacheState>('connections', { solvedTitles: solved.map(s => s.title), mistakes: newMistakes, gameOver: false, won: false });
       }
       setSelected([]);
     }

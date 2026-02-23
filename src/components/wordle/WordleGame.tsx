@@ -7,12 +7,21 @@ import WordleResult from './WordleResult';
 import type { WordleGuess, LetterState } from '@/types/games';
 import { VALID_ANSWERS, VALID_GUESSES } from '@/lib/wordle-words';
 import { getDailyIndex } from '@/lib/daily';
+import { readDailyCache, writeDailyCache } from '@/lib/cache';
 
 const WORD_LENGTH = 5;
 const MAX_GUESSES = 6;
 
+interface WordleCacheState {
+  guesses: WordleGuess[];
+  gameOver: boolean;
+  won: boolean;
+}
+
 export default function WordleGame({ overrideAnswer }: { overrideAnswer?: string } = {}) {
   const answer = (overrideAnswer ?? VALID_ANSWERS[getDailyIndex(VALID_ANSWERS.length)]).toUpperCase();
+  const isDaily = !overrideAnswer;
+
   const [guesses, setGuesses] = useState<WordleGuess[]>([]);
   const [currentGuess, setCurrentGuess] = useState('');
   const [gameOver, setGameOver] = useState(false);
@@ -24,7 +33,17 @@ export default function WordleGame({ overrideAnswer }: { overrideAnswer?: string
   useEffect(() => {
     const savedStreak = localStorage.getItem('wordle-streak');
     if (savedStreak) setStreak(parseInt(savedStreak, 10));
-  }, []);
+
+    if (isDaily) {
+      const cached = readDailyCache<WordleCacheState>('wordle');
+      if (cached) {
+        setGuesses(cached.guesses);
+        setGameOver(cached.gameOver);
+        setWon(cached.won);
+        if (cached.gameOver) setShowResult(true);
+      }
+    }
+  }, [isDaily]);
 
   const letterStates = useCallback((): Record<string, LetterState> => {
     const states: Record<string, LetterState> = {};
@@ -96,14 +115,18 @@ export default function WordleGame({ overrideAnswer }: { overrideAnswer?: string
       localStorage.setItem('wordle-streak', String(newStreak));
       setWon(true);
       setGameOver(true);
+      if (isDaily) writeDailyCache<WordleCacheState>('wordle', { guesses: newGuesses, gameOver: true, won: true });
       setTimeout(() => setShowResult(true), 1600);
     } else if (newGuesses.length >= MAX_GUESSES) {
       localStorage.setItem('wordle-streak', '0');
       setStreak(0);
       setGameOver(true);
+      if (isDaily) writeDailyCache<WordleCacheState>('wordle', { guesses: newGuesses, gameOver: true, won: false });
       setTimeout(() => setShowResult(true), 1600);
+    } else if (isDaily) {
+      writeDailyCache<WordleCacheState>('wordle', { guesses: newGuesses, gameOver: false, won: false });
     }
-  }, [answer, evaluateGuess]);
+  }, [answer, evaluateGuess, isDaily]);
 
   const handleKey = useCallback((key: string) => {
     if (gameOver) return;
