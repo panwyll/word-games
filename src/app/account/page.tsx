@@ -3,7 +3,8 @@
 import { useSession } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { useState, useEffect, Suspense } from 'react';
+import { useState, Suspense } from 'react';
+import { useStripeAvailable } from '@/lib/stripe-client';
 
 function AccountContent() {
   const { data: session } = useSession();
@@ -11,23 +12,10 @@ function AccountContent() {
   const upgraded = params.get('upgraded') === 'true';
   const [portalLoading, setPortalLoading] = useState(false);
   const [upgradeLoading, setUpgradeLoading] = useState(false);
-  const [stripeDisabled, setStripeDisabled] = useState(false);
+  const { stripeDisabled } = useStripeAvailable();
 
   const tier = session?.user?.tier ?? 'free';
   const isPremium = tier === 'premium';
-
-  useEffect(() => {
-    // Check if Stripe is available on mount
-    async function checkStripe() {
-      try {
-        const res = await fetch('/api/stripe/checkout', { method: 'HEAD' });
-        setStripeDisabled(res.status === 503);
-      } catch {
-        setStripeDisabled(true);
-      }
-    }
-    checkStripe();
-  }, []);
 
   async function openPortal() {
     setPortalLoading(true);

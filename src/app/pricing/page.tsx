@@ -2,7 +2,8 @@
 
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useStripeAvailable } from '@/lib/stripe-client';
 
 const FREE_FEATURES = [
   "Today's daily Wordle",
@@ -24,20 +25,7 @@ export default function PricingPage() {
   const { data: session } = useSession();
   const isPremium = session?.user?.tier === 'premium';
   const [loading, setLoading] = useState(false);
-  const [stripeDisabled, setStripeDisabled] = useState(false);
-
-  useEffect(() => {
-    // Check if Stripe is available on mount
-    async function checkStripe() {
-      try {
-        const res = await fetch('/api/stripe/checkout', { method: 'HEAD' });
-        setStripeDisabled(res.status === 503);
-      } catch {
-        setStripeDisabled(true);
-      }
-    }
-    checkStripe();
-  }, []);
+  const { stripeDisabled } = useStripeAvailable();
 
   async function handleUpgrade() {
     if (!session) {

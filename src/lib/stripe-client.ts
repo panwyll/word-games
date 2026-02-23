@@ -1,21 +1,26 @@
 /**
- * Client-side Stripe utilities
- * 
- * These functions help the UI gracefully handle when Stripe is not configured
+ * Custom React hook to check if Stripe is configured
+ * Used by pricing and account pages to detect sandbox mode
  */
+import { useEffect, useState } from 'react';
 
-/**
- * Check if Stripe checkout is available
- * Makes a lightweight check to the checkout endpoint
- */
-export async function isStripeAvailable(): Promise<boolean> {
-  try {
-    const res = await fetch('/api/stripe/checkout', { 
-      method: 'HEAD',
-    });
-    // 401 means authenticated route but Stripe works, 503 means Stripe not configured
-    return res.status !== 503;
-  } catch {
-    return false;
-  }
+export function useStripeAvailable() {
+  const [stripeDisabled, setStripeDisabled] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function checkStripe() {
+      try {
+        const res = await fetch('/api/stripe/checkout', { method: 'HEAD' });
+        setStripeDisabled(res.status === 503);
+      } catch {
+        setStripeDisabled(true);
+      } finally {
+        setLoading(false);
+      }
+    }
+    checkStripe();
+  }, []);
+
+  return { stripeDisabled, loading };
 }
