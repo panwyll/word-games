@@ -12,6 +12,14 @@ NYT-style word games: Wordle, Connections, and Spelling Bee with a freemium subs
 
 ## Quick Start
 
+### Prerequisites
+
+You'll need a PostgreSQL database for both development and production. SQLite is not supported as it doesn't work in serverless environments like Vercel.
+
+**Local Development Options:**
+- **Docker** (recommended): `docker run -d -e POSTGRES_PASSWORD=postgres -p 5432:5432 postgres`
+- **Cloud Services**: [Supabase](https://supabase.com) (free tier), [Neon](https://neon.tech) (free tier), or [Railway](https://railway.app)
+
 ### Development Mode (Sandbox)
 
 The app can run in **sandbox mode** without any Stripe configuration for local development:
@@ -20,9 +28,9 @@ The app can run in **sandbox mode** without any Stripe configuration for local d
 # Install dependencies
 npm install
 
-# Set up minimal environment variables
+# Set up environment variables
 cp .env.example .env
-# Edit .env and set DATABASE_URL and NEXTAUTH_SECRET
+# Edit .env and set your PostgreSQL DATABASE_URL and NEXTAUTH_SECRET
 
 # Initialize database
 npx prisma db push
@@ -57,14 +65,22 @@ STRIPE_WEBHOOK_SECRET="whsec_..."
 
 ### Vercel (Recommended)
 
-1. Push your code to GitHub
-2. Import to Vercel
-3. Set environment variables:
-   - `DATABASE_URL` (required)
-   - `NEXTAUTH_SECRET` (required)
-   - `NEXTAUTH_URL` (required)
-   - Stripe variables (optional - only if you want payments)
-4. Deploy!
+1. **Set up a PostgreSQL database:**
+   - Use [Vercel Postgres](https://vercel.com/docs/storage/vercel-postgres) (recommended)
+   - Or [Supabase](https://supabase.com), [Neon](https://neon.tech), [Railway](https://railway.app), etc.
+
+2. **Push your code to GitHub**
+
+3. **Import to Vercel and set environment variables:**
+   - `DATABASE_URL` (required) - Your PostgreSQL connection string
+   - `NEXTAUTH_SECRET` (required) - Generate with `openssl rand -base64 32`
+   - `NEXTAUTH_URL` (required) - Your deployment URL (e.g., `https://your-app.vercel.app`)
+   - Stripe variables (optional - only if you want payments):
+     - `STRIPE_SECRET_KEY`
+     - `STRIPE_PRICE_ID`
+     - `STRIPE_WEBHOOK_SECRET`
+
+4. **Deploy!**
 
 The app will automatically detect if Stripe is configured and enable/disable features accordingly.
 
