@@ -13,7 +13,9 @@ export function useStripeAvailable() {
       try {
         const res = await fetch('/api/stripe/checkout', { method: 'HEAD' });
         setStripeDisabled(res.status === 503);
-      } catch {
+      } catch (error) {
+        // Network errors or other exceptions - assume Stripe is unavailable
+        console.warn('Failed to check Stripe availability:', error);
         setStripeDisabled(true);
       } finally {
         setLoading(false);

@@ -7,6 +7,14 @@ import { STRIPE_ENABLED, getStripeDisabledMessage } from '@/lib/stripe-config';
 
 const stripe = STRIPE_ENABLED ? new Stripe(process.env.STRIPE_SECRET_KEY!) : null;
 
+export async function HEAD() {
+  // Used by client-side to check if Stripe is configured
+  if (!STRIPE_ENABLED || !stripe) {
+    return new NextResponse(null, { status: 503 });
+  }
+  return new NextResponse(null, { status: 200 });
+}
+
 export async function POST(req: NextRequest) {
   // Return friendly error if Stripe is not configured
   if (!STRIPE_ENABLED || !stripe) {
