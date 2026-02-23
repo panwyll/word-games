@@ -45,3 +45,121 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 30
+
+  check-vercel-deployment:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    permissions:
+      deployments: read
+    steps:
+      - name: Wait for Vercel preview deployment
+        uses: actions/github-script@v7
+        timeout-minutes: 10
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        with:
+          script: |
+            const sha = context.payload.pull_request.head.sha;
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const maxWaitMs = 8 * 60 * 1000; // 8 min, inside the 10-min step timeout
+            const pollIntervalMs = 15000;
+            const startTime = Date.now();
+
+            core.info(`Checking Vercel deployment for commit ${sha}`);
+
+            // Find a Vercel preview deployment for this commit
+            async function findVercelDeployment() {
+              const { data: deployments } = await github.rest.repos.listDeployments({
+                owner, repo, sha, per_page: 10,
+              });
+              return deployments.find(d =>
+                d.environment.toLowerCase().includes('preview') ||
+                (d.creator && d.creator.login.toLowerCase().includes('vercel'))
+              );
+            }
+
+            // Poll until a Vercel deployment appears
+            let deployment = null;
+            while (!deployment && (Date.now() - startTime) < maxWaitMs) {
+              deployment = await findVercelDeployment();
+              if (!deployment) {
+                core.info('Waiting for Vercel deployment to be created...');
+                await new Promise(r => setTimeout(r, pollIntervalMs));
+              }
+            }
+
+            if (!deployment) {
+              core.notice('No Vercel preview deployment found within timeout. Skipping Vercel deployment check.');
+              return;
+            }
+
+            core.info(`Found deployment: ID=${deployment.id}, environment="${deployment.environment}"`);
+
+            // Poll until the deployment reaches a terminal state
+            while ((Date.now() - startTime) < maxWaitMs) {
+              const { data: statuses } = await github.rest.repos.listDeploymentStatuses({
+                owner, repo,
+                deployment_id: deployment.id,
+                per_page: 1,
+              });
+
+              if (statuses.length === 0) {
+                core.info('Waiting for deployment status...');
+                await new Promise(r => setTimeout(r, pollIntervalMs));
+                continue;
+              }
+
+              const { state, description, log_url, target_url } = statuses[0];
+              core.info(`Deployment state: ${state}`);
+
+              if (state === 'success') {
+                core.info(`✅ Vercel deployment succeeded: ${target_url}`);
+                return;
+              }
+
+              if (state === 'failure' || state === 'error') {
+                const lines = [
+                  `❌ Vercel deployment ${state}!`,
+                  description ? `Error: ${description}` : '',
+                  log_url     ? `Logs: ${log_url}`         : '',
+                  target_url  ? `Preview URL: ${target_url}` : '',
+                ].filter(Boolean);
+
+                // Optionally fetch detailed build output via Vercel API when a token is available
+                const vercelToken = process.env.VERCEL_TOKEN;
+                if (vercelToken && log_url) {
+                  try {
+                    // Extract deployment ID from the log URL (format: .../deployments/<id>/...)
+                    const match = log_url.match(/deployments\/([^/]+)/);
+                    if (match) {
+                      const deploymentId = match[1];
+                      const eventsUrl = `https://api.vercel.com/v6/deployments/${deploymentId}/events?direction=forward&limit=100`;
+                      const resp = await fetch(eventsUrl, {
+                        headers: { Authorization: `Bearer ${vercelToken}` },
+                      });
+                      if (resp.ok) {
+                        const events = await resp.json();
+                        const buildLines = (Array.isArray(events) ? events : [])
+                          .filter(e => e.type === 'stdout' || e.type === 'stderr' || e.type === 'build')
+                          .map(e => e.payload?.text || e.payload?.message || '')
+                          .filter(Boolean);
+                        if (buildLines.length > 0) {
+                          lines.push('', 'Build output:', ...buildLines.slice(-100));
+                        }
+                      }
+                    }
+                  } catch (err) {
+                    core.warning(`Could not fetch Vercel build logs: ${err.message}`);
+                  }
+                }
+
+                core.setFailed(lines.join('\n'));
+                return;
+              }
+
+              // Still in progress (queued / in_progress)
+              await new Promise(r => setTimeout(r, pollIntervalMs));
+            }
+
+            core.warning('⚠️ Timed out waiting for Vercel deployment to complete.');
