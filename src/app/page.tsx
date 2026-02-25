@@ -14,7 +14,7 @@ export default function Home() {
           </Link>
         </p>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <GameCard
           href="/wordle"
           title="Wordle"
@@ -35,6 +35,13 @@ export default function Home() {
           description="Make words from 7 letters. Must use center letter."
           emoji="🐝"
           color="amber"
+        />
+        <GameCard
+          href="/letter-boxed"
+          title="Letter Boxed"
+          description="Connect letters to form words. Use all 12 letters!"
+          emoji="🔷"
+          color="blue"
         />
       </div>
     </div>
