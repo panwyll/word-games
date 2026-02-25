@@ -6,7 +6,7 @@ import AuthHeader from '@/components/AuthHeader';
 
 export const metadata: Metadata = {
   title: 'Word Games',
-  description: 'NYT-style word games: Wordle, Connections, and Spelling Bee',
+  description: 'NYT-style word games: Wordle, Connections, Spelling Bee, and Letter Boxed',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -21,6 +21,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <Link href="/wordle" className="hover:underline">Wordle</Link>
                 <Link href="/connections" className="hover:underline">Connections</Link>
                 <Link href="/spelling-bee" className="hover:underline">Spelling Bee</Link>
+                <Link href="/letter-boxed" className="hover:underline">Letter Boxed</Link>
                 <Link href="/pricing" className="hover:underline text-yellow-600 dark:text-yellow-400">Pricing</Link>
                 <AuthHeader />
               </nav>
