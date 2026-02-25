@@ -39,8 +39,8 @@ export default function LetterBoxedGame({ overridePuzzle }: { overridePuzzle?: L
   const submitWord = useCallback(() => {
     const word = currentWord.toUpperCase();
     
-    if (word.length < 3) {
-      showMessage('Word must be at least 3 letters');
+    if (word.length < 4) {
+      showMessage('Word must be at least 4 letters');
       return;
     }
     
@@ -163,7 +163,7 @@ export default function LetterBoxedGame({ overridePuzzle }: { overridePuzzle?: L
         </button>
         <button
           onClick={submitWord}
-          disabled={currentWord.length < 3 || gameWon}
+          disabled={currentWord.length < 4 || gameWon}
           className="px-6 py-2 bg-blue-500 text-white rounded font-medium hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           Enter ↵

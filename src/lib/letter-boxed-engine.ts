@@ -10,7 +10,7 @@ function isValidLetterBoxedWord(
   word: string,
   sides: [string[], string[], string[], string[]]
 ): boolean {
-  if (word.length < 3) return false;
+  if (word.length < 4) return false;
 
   // Build a map of letter to side index
   const letterToSide = new Map<string, number>();

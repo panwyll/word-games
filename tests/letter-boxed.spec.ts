@@ -40,7 +40,7 @@ test.describe('Letter Boxed Game', () => {
   });
 
   test('shows game rules', async ({ page }) => {
-    await expect(page.getByText(/Words must be at least 3 letters/i)).toBeVisible();
+    await expect(page.getByText(/Words must be at least 4 letters/i)).toBeVisible();
     await expect(page.getByText(/Each word must start with the last letter/i)).toBeVisible();
     await expect(page.getByText(/Cannot use consecutive letters from the same side/i)).toBeVisible();
   });

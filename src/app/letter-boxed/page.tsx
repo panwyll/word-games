@@ -15,7 +15,7 @@ export default function LetterBoxedPage() {
       </div>
       <LetterBoxedGame />
       <div className="mt-8 text-center text-sm text-gray-500 dark:text-gray-400 space-y-1">
-        <p>📝 Words must be at least 3 letters</p>
+        <p>📝 Words must be at least 4 letters</p>
         <p>🔄 Each word must start with the last letter of the previous word</p>
         <p>🚫 Cannot use consecutive letters from the same side</p>
       </div>
