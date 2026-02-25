@@ -45,3 +45,131 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 30
+
+  check-vercel-deployment:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    permissions:
+      deployments: read
+      statuses: read
+    steps:
+      - name: Wait for Vercel preview deployment
+        uses: actions/github-script@v7
+        timeout-minutes: 10
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        with:
+          script: |
+            const sha = context.payload.pull_request.head.sha;
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const maxWaitMs = 8 * 60 * 1000; // 8 min, inside the 10-min step timeout
+            const pollIntervalMs = 15000;
+            const startTime = Date.now();
+
+            core.info(`Checking Vercel deployment for commit ${sha}`);
+
+            // Helper: fetch detailed Vercel build logs using the deployment inspect URL
+            async function fetchVercelBuildLogs(inspectUrl) {
+              const vercelToken = process.env.VERCEL_TOKEN;
+              if (!vercelToken || !inspectUrl) return [];
+              try {
+                // Extract deployment ID from the Vercel inspect URL (last path segment)
+                const match = inspectUrl.match(/\/([a-zA-Z0-9_-]+)$/);
+                if (!match) return [];
+                const deploymentId = match[1];
+                const eventsUrl = `https://api.vercel.com/v6/deployments/${deploymentId}/events?direction=forward&limit=100`;
+                const resp = await fetch(eventsUrl, {
+                  headers: { Authorization: `Bearer ${vercelToken}` },
+                });
+                if (!resp.ok) return [];
+                const events = await resp.json();
+                return (Array.isArray(events) ? events : [])
+                  .filter(e => e.type === 'stdout' || e.type === 'stderr' || e.type === 'build')
+                  .map(e => e.payload?.text || e.payload?.message || '')
+                  .filter(Boolean);
+              } catch (err) {
+                core.warning(`Could not fetch Vercel build logs: ${err.message}`);
+                return [];
+              }
+            }
+
+            // Helper: handle a terminal Vercel state and either pass or fail the job
+            async function handleTerminalState(state, description, inspectUrl) {
+              if (state === 'success') {
+                core.info(`✅ Vercel deployment succeeded: ${inspectUrl}`);
+                return true; // done, no failure
+              }
+              if (state === 'failure' || state === 'error') {
+                const lines = [
+                  `❌ Vercel deployment ${state}!`,
+                  description ? `Error: ${description}` : '',
+                  inspectUrl  ? `Inspect: ${inspectUrl}` : '',
+                ].filter(Boolean);
+                const buildLines = await fetchVercelBuildLogs(inspectUrl);
+                if (buildLines.length > 0) {
+                  lines.push('', 'Build output (last 100 lines):', ...buildLines.slice(-100));
+                }
+                core.setFailed(lines.join('\n'));
+                return true; // done, with failure
+              }
+              return false; // not terminal yet
+            }
+
+            // --- Primary: GitHub commit statuses (Vercel's default integration) ---
+            async function checkCommitStatuses() {
+              const { data: statuses } = await github.rest.repos.listCommitStatusesForRef({
+                owner, repo, ref: sha, per_page: 100,
+              });
+              // Pick the most-recent status whose context contains "vercel"
+              return statuses.find(s => s.context.toLowerCase().includes('vercel')) || null;
+            }
+
+            // --- Secondary: GitHub Deployments API (some Vercel configurations) ---
+            async function checkDeploymentsApi() {
+              const { data: deployments } = await github.rest.repos.listDeployments({
+                owner, repo, sha, per_page: 10,
+              });
+              const dep = deployments.find(d =>
+                d.environment.toLowerCase().includes('preview') ||
+                (d.creator && d.creator.login.toLowerCase().includes('vercel'))
+              );
+              if (!dep) return null;
+              const { data: depStatuses } = await github.rest.repos.listDeploymentStatuses({
+                owner, repo, deployment_id: dep.id, per_page: 1,
+              });
+              return depStatuses[0] ? { ...depStatuses[0], _source: 'deployments' } : null;
+            }
+
+            // Poll until a terminal state is reached via either method
+            while ((Date.now() - startTime) < maxWaitMs) {
+              // 1. Check commit statuses first (Vercel's primary reporting mechanism)
+              const commitStatus = await checkCommitStatuses();
+              if (commitStatus) {
+                const { state, description, target_url } = commitStatus;
+                core.info(`Vercel commit status: ${state}`);
+                const done = await handleTerminalState(state, description, target_url);
+                if (done) return;
+              }
+
+              // 2. Fallback to Deployments API
+              let depStatus = null;
+              if (!commitStatus) {
+                depStatus = await checkDeploymentsApi();
+                if (depStatus) {
+                  const { state, description, log_url, target_url } = depStatus;
+                  core.info(`Vercel deployment status: ${state}`);
+                  const done = await handleTerminalState(state, description, log_url || target_url);
+                  if (done) return;
+                }
+              }
+
+              if (!commitStatus && !depStatus) {
+                core.info('Waiting for Vercel deployment to be created...');
+              } else {
+                core.info('Vercel deployment still in progress, waiting...');
+              }
+              await new Promise(r => setTimeout(r, pollIntervalMs));
+            }
+
+            core.notice('No Vercel deployment reached a terminal state within timeout. Skipping.');
