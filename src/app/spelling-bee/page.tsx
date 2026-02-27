@@ -1,9 +1,12 @@
 import SpellingBeeGame from '@/components/spelling-bee/SpellingBeeGame';
+import { getDailySpellingBeePuzzle } from '@/lib/spelling-bee-engine';
 import Link from 'next/link';
 
 export const metadata = { title: 'Spelling Bee – Word Games' };
 
 export default function SpellingBeePage() {
+  // Generate the puzzle on the server so the full dictionary is not bundled client-side.
+  const puzzle = getDailySpellingBeePuzzle();
   return (
     <div className="max-w-lg mx-auto px-4 py-8">
       <div className="text-center mb-8">
@@ -13,7 +16,7 @@ export default function SpellingBeePage() {
           🔒 Archive — Premium
         </Link>
       </div>
-      <SpellingBeeGame />
+      <SpellingBeeGame overridePuzzle={puzzle} />
     </div>
   );
 }

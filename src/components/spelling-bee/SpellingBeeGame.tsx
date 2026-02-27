@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import SpellingBeeHive from './SpellingBeeHive';
 import type { SpellingBeePuzzle } from '@/types/games';
-import { getDailySpellingBeePuzzle } from '@/lib/spelling-bee-engine';
 
 function getScore(word: string, isPangram: boolean): number {
   if (word.length === 4) return 1;
@@ -24,8 +23,8 @@ function getRank(score: number, maxScore: number): string {
   return 'Beginner';
 }
 
-export default function SpellingBeeGame({ overridePuzzle }: { overridePuzzle?: SpellingBeePuzzle } = {}) {
-  const puzzle: SpellingBeePuzzle = overridePuzzle ?? getDailySpellingBeePuzzle();
+export default function SpellingBeeGame({ overridePuzzle }: { overridePuzzle: SpellingBeePuzzle }) {
+  const puzzle: SpellingBeePuzzle = overridePuzzle;
   const allLetters = useMemo(
     () => new Set([puzzle.centerLetter.toUpperCase(), ...puzzle.outerLetters.map(l => l.toUpperCase())]),
     [puzzle.centerLetter, puzzle.outerLetters]

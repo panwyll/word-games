@@ -6,8 +6,17 @@ on:
   pull_request:
     branches: [main]
 
+# The build gate is enforced by the real Vercel deployment check, which the
+# Vercel GitHub app posts on every PR commit.  Set "Vercel" (or the deployment
+# check name shown in your PR) as a *required status check* in
+# Settings → Branches → Branch protection rules.
+#
+# This workflow only runs the E2E test suite, which builds the app itself via
+# the Playwright webServer config.
+
 jobs:
-  build-and-test:
+  e2e:
+    name: E2E tests (Playwright)
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -44,7 +53,7 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Run Playwright tests
-        run: npm run test:e2e -- --project=chromium
+        run: npm run test:e2e -- --project=chromium --project=mobile-chrome
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4
@@ -54,6 +63,13 @@ jobs:
           path: playwright-report/
           retention-days: 30
 
+      - name: Upload screenshots
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: screenshots
+          path: test-results/
+          retention-days: 30
   check-vercel-deployment:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
