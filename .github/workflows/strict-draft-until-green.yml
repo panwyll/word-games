@@ -1,0 +1,238 @@
+name: Strict PR gate (Draft until green)
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+      - converted_to_draft
+  check_suite:
+    types: [completed]
+  check_run:
+    types: [completed]
+
+permissions:
+  contents: read
+  pull-requests: write
+  checks: read
+  statuses: read
+  issues: write
+
+concurrency:
+  group: strict-gate-${{ github.event.pull_request.number || github.event.check_suite.id || github.event.check_run.id }}
+  cancel-in-progress: false
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Enforce Draft / Ready based on checks
+        uses: actions/github-script@v7
+        env:
+          # YOUR REQUIRED CHECKS (from your screenshots)
+          REQUIRED_CHECKS: "CI / build-and-test,CI / check-vercel-deployment,Vercel"
+          NEEDS_FIX_LABEL: "needs-fix"
+
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
+            async function getPRsFromEvent() {
+              if (context.payload.pull_request) return [context.payload.pull_request];
+
+              const prs =
+                context.payload.check_suite?.pull_requests ||
+                context.payload.check_run?.pull_requests ||
+                [];
+
+              if (!prs.length) return [];
+
+              const full = [];
+              for (const prRef of prs) {
+                const pr = await github.rest.pulls.get({
+                  owner, repo, pull_number: prRef.number
+                });
+                full.push(pr.data);
+              }
+              return full;
+            }
+
+            function requiredChecks() {
+              return (process.env.REQUIRED_CHECKS || "")
+                .split(",")
+                .map(s => s.trim())
+                .filter(Boolean);
+            }
+
+            async function getCheckRuns(sha) {
+              const res = await github.rest.checks.listForRef({
+                owner, repo, ref: sha, per_page: 100
+              });
+              return res.data.check_runs || [];
+            }
+
+            async function getStatuses(sha) {
+              const res = await github.rest.repos.listCommitStatusesForRef({
+                owner, repo, ref: sha, per_page: 100
+              });
+              return res.data || [];
+            }
+
+            function evaluate(required, checkRuns, statuses) {
+              const checkMap = new Map();
+              for (const cr of checkRuns) {
+                checkMap.set(cr.name, cr);
+              }
+
+              const statusMap = new Map();
+              for (const st of statuses) {
+                statusMap.set(st.context, st);
+              }
+
+              const missing = [];
+              const failing = [];
+              const pending = [];
+              const passing = [];
+
+              for (const name of required) {
+                const cr = checkMap.get(name);
+                const st = statusMap.get(name);
+
+                if (!cr && !st) {
+                  missing.push(name);
+                  continue;
+                }
+
+                if (cr) {
+                  if (cr.status !== "completed") {
+                    pending.push(name);
+                    continue;
+                  }
+                  if (cr.conclusion !== "success") {
+                    failing.push(name);
+                    continue;
+                  }
+                  passing.push(name);
+                  continue;
+                }
+
+                if (st) {
+                  if (st.state === "pending") {
+                    pending.push(name);
+                    continue;
+                  }
+                  if (st.state !== "success") {
+                    failing.push(name);
+                    continue;
+                  }
+                  passing.push(name);
+                }
+              }
+
+              return { missing, failing, pending, passing };
+            }
+
+            async function ensureLabel(prNumber, label, on) {
+              const labels = await github.rest.issues.listLabelsOnIssue({
+                owner, repo, issue_number: prNumber
+              });
+
+              const has = labels.data.some(l => l.name === label);
+
+              if (on && !has) {
+                await github.rest.issues.addLabels({
+                  owner, repo, issue_number: prNumber,
+                  labels: [label]
+                });
+              }
+
+              if (!on && has) {
+                await github.rest.issues.removeLabel({
+                  owner, repo, issue_number: prNumber,
+                  name: label
+                });
+              }
+            }
+
+            async function toDraft(pr) {
+              if (!pr.draft) {
+                await github.rest.pulls.convertToDraft({
+                  owner, repo, pull_number: pr.number
+                });
+              }
+            }
+
+            async function toReady(pr) {
+              if (pr.draft) {
+                await github.rest.pulls.markReadyForReview({
+                  owner, repo, pull_number: pr.number
+                });
+              }
+            }
+
+            const required = requiredChecks();
+            const label = process.env.NEEDS_FIX_LABEL || "needs-fix";
+
+            const prs = await getPRsFromEvent();
+            if (!prs.length) return;
+
+            for (const pr of prs) {
+              if (pr.state !== "open") continue;
+
+              const sha = pr.head.sha;
+              const checks = await getCheckRuns(sha);
+              const statuses = await getStatuses(sha);
+
+              const result = evaluate(required, checks, statuses);
+              const allGreen =
+                result.missing.length === 0 &&
+                result.failing.length === 0 &&
+                result.pending.length === 0;
+
+              if (!allGreen) {
+                await toDraft(pr);
+                await ensureLabel(pr.number, label, true);
+
+                const body = `
+### 🚫 Draft enforced — checks not green
+
+Required checks:
+${required.map(c => "- " + c).join("\n")}
+
+Missing: ${result.missing.join(", ") || "none"}
+Failing: ${result.failing.join(", ") || "none"}
+Pending: ${result.pending.join(", ") || "none"}
+Passing: ${result.passing.join(", ") || "none"}
+
+This PR will automatically become **Ready for review** when all checks pass.
+`;
+
+                const comments = await github.rest.issues.listComments({
+                  owner, repo, issue_number: pr.number
+                });
+
+                const lastBot = comments.data
+                  .slice()
+                  .reverse()
+                  .find(c => c.user?.type === "Bot" && c.body?.includes("Draft enforced"));
+
+                if (!lastBot || lastBot.body !== body) {
+                  await github.rest.issues.createComment({
+                    owner, repo, issue_number: pr.number, body
+                  });
+                }
+
+              } else {
+                await toReady(pr);
+                await ensureLabel(pr.number, label, false);
+
+                await github.rest.issues.createComment({
+                  owner, repo, issue_number: pr.number,
+                  body: "### ✅ All required checks passed — PR ready for review"
+                });
+              }
+            }
