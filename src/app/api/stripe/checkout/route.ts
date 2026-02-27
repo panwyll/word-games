@@ -8,8 +8,6 @@ import { STRIPE_ENABLED, getStripeDisabledMessage } from '@/lib/stripe-config';
 // Never statically pre-render — Stripe key is only available at runtime.
 export const dynamic = 'force-dynamic';
 
-export async function POST(req: NextRequest) {
-  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 const stripe = STRIPE_ENABLED ? new Stripe(process.env.STRIPE_SECRET_KEY!) : null;
 
 export async function HEAD() {
