@@ -50,7 +50,7 @@ test.describe('Letter Boxed Game', () => {
     await page.keyboard.type('MAP');
     await page.keyboard.press('Enter');
     // Wait for feedback message to appear (either "Not in word list" or success message)
-    await expect(page.locator('[role="alert"]')).toBeVisible({ timeout: 2000 });
+    await expect(page.locator('[role="alert"]').first()).toBeVisible({ timeout: 2000 });
   });
 
   test('archive link is visible', async ({ page }) => {
