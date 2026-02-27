@@ -101,8 +101,8 @@ export default function LetterBoxedGame({ overridePuzzle }: { overridePuzzle?: L
     setUsedLetters(prev => new Set([...prev, ...word.split('')]));
     setCurrentWord('');
     
-    const newUsedCount = new Set([...usedLetters, ...word.split('')]).size;
-    showMessage(`✓ ${word} (+${word.split('').filter(l => !usedLetters.has(l)).length} new letters)`);
+    const newLettersCount = word.split('').filter(l => !usedLetters.has(l)).length;
+    showMessage(`✓ ${word} (+${newLettersCount} new letters)`);
   }, [currentWord, puzzle, allLetters, submittedWords, usedLetters]);
 
   const handleLetterClick = useCallback((letter: string) => {

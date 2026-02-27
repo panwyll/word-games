@@ -53,7 +53,7 @@ export default function LetterBoxedArchive() {
             <span className="text-sm font-medium">
               {date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
             </span>
-            <span className="text-xs text-gray-400">{allLetters.slice(0, 12)} →</span>
+            <span className="text-xs text-gray-400">{allLetters} →</span>
           </button>
         );
       })}

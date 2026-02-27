@@ -97,8 +97,8 @@ function findSolutions(validWords: string[], sides: string[][]): string[][] {
     const followers = canFollow.get(lastWord) || [];
     
     for (const nextWord of followers) {
-      const newUsed = new Set([...used, ...nextWord.split('')]);
-      queue.push({ chain: [...chain, nextWord], used: newUsed });
+      const updatedUsedLetters = new Set([...used, ...nextWord.split('')]);
+      queue.push({ chain: [...chain, nextWord], used: updatedUsedLetters });
     }
   }
 
