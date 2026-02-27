@@ -1,6 +1,9 @@
 {
   "framework": "nextjs",
-  "buildCommand": "npm run build",
+  "buildCommand": "npx prisma generate && npm run build",
   "devCommand": "npm run dev",
-  "installCommand": "npm install"
+  "installCommand": "npm install",
+  "env": {
+    "PRISMA_CLI_TELEMETRY_OPTOUT": "1"
+  }
 }
