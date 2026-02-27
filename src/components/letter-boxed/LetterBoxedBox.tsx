@@ -15,13 +15,6 @@ export default function LetterBoxedBox({ sides, currentWord, usedLetters, onLett
     'bg-yellow-500 hover:bg-yellow-600'
   ];
 
-  const borderColors = [
-    'border-red-300',
-    'border-blue-300',
-    'border-green-300',
-    'border-yellow-300'
-  ];
-
   return (
     <div className="relative w-full max-w-md aspect-square">
       {/* The Box */}

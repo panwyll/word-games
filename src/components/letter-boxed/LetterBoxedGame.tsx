@@ -119,16 +119,6 @@ export default function LetterBoxedGame({ overridePuzzle }: { overridePuzzle?: L
     setCurrentWord('');
   };
 
-  const handleShuffle = () => {
-    // Shuffle the letters within each side
-    const shuffled = puzzle.sides.map(side => 
-      [...side].sort(() => Math.random() - 0.5)
-    ) as [string[], string[], string[], string[]];
-    // Note: This would require making sides mutable, so we'll skip actual shuffling
-    // Just show a message
-    showMessage('Shuffled!');
-  };
-
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       const key = e.key.toLowerCase();

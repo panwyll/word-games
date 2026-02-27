@@ -73,7 +73,7 @@ export function generateLetterBoxedPuzzle(seed: number): LetterBoxedPuzzle {
   );
   
   // Try to find a solution (words that use all letters, with chaining)
-  const solution = findSolution(sides, validWords);
+  const solution = findSolution(sides, validWords, seed);
   
   return {
     sides,
@@ -82,9 +82,10 @@ export function generateLetterBoxedPuzzle(seed: number): LetterBoxedPuzzle {
   };
 }
 
-function findSolution(sides: string[][], validWords: string[]): string[] {
+function findSolution(sides: string[][], validWords: string[], seed: number): string[] {
   const allLetters = new Set(sides.flat());
   const maxAttempts = 1000;
+  const rng = seededRng(seed + 999); // Use seeded RNG
   
   // Try to find a 2-3 word solution
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
@@ -92,7 +93,7 @@ function findSolution(sides: string[][], validWords: string[]): string[] {
     const longWords = validWords.filter(w => w.length >= 6);
     if (longWords.length === 0) break;
     
-    const startWord = longWords[Math.floor(Math.random() * longWords.length)];
+    const startWord = longWords[Math.floor(rng() * longWords.length)];
     const used = new Set(startWord.split(''));
     const chain = [startWord];
     
