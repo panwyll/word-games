@@ -3,6 +3,7 @@
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { useState } from 'react';
+import { useStripeAvailable } from '@/lib/stripe-client';
 
 const FREE_FEATURES = [
   "Today's daily Wordle",
@@ -24,6 +25,7 @@ export default function PricingPage() {
   const { data: session } = useSession();
   const isPremium = session?.user?.tier === 'premium';
   const [loading, setLoading] = useState(false);
+  const { stripeDisabled } = useStripeAvailable();
 
   async function handleUpgrade() {
     if (!session) {
@@ -33,6 +35,14 @@ export default function PricingPage() {
     setLoading(true);
     const res = await fetch('/api/stripe/checkout', { method: 'POST' });
     const data = await res.json();
+    
+    if (res.status === 503) {
+      // Stripe not configured
+      alert(data.message || 'Payment processing is not available in this environment.');
+      setLoading(false);
+      return;
+    }
+    
     if (data.url) window.location.href = data.url;
     else setLoading(false);
   }
@@ -42,6 +52,11 @@ export default function PricingPage() {
       <div className="text-center mb-12">
         <h1 className="text-4xl font-bold mb-4">Simple, Honest Pricing</h1>
         <p className="text-gray-500 text-lg">Play daily puzzles for free. Unlock everything for less than a coffee.</p>
+        {stripeDisabled && (
+          <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 text-yellow-800 dark:text-yellow-300 rounded-lg text-sm">
+            ℹ️ Payment processing is not configured in this environment. All features are available for testing.
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-2xl mx-auto">
@@ -91,6 +106,10 @@ export default function PricingPage() {
           {isPremium ? (
             <div className="text-center py-2.5 bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-300 rounded-full font-bold text-sm">
               ✓ You&apos;re Premium!
+            </div>
+          ) : stripeDisabled ? (
+            <div className="text-center py-2.5 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 rounded-full font-medium text-sm">
+              Payments Not Available
             </div>
           ) : (
             <button

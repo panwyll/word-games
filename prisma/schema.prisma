@@ -1,6 +1,8 @@
-// Prisma schema — SQLite for dev, set DATABASE_URL=postgresql://... for production
+// Prisma schema — Use PostgreSQL for production (Vercel, etc.)
+// For local development, you can use PostgreSQL via Docker or a cloud service
+// SQLite is not supported in serverless environments like Vercel
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 

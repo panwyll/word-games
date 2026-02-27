@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "test:e2e": "playwright test",
+    "postinstall": "prisma generate",
     "prepare": "husky"
   },
   "dependencies": {

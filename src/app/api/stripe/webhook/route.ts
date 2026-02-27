@@ -1,12 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { prisma } from '@/lib/prisma';
+import { STRIPE_WEBHOOK_ENABLED } from '@/lib/stripe-config';
 
 // Never statically pre-render — Stripe key is only available at runtime.
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+const stripe = STRIPE_WEBHOOK_ENABLED ? new Stripe(process.env.STRIPE_SECRET_KEY!) : null;
+
+export async function POST(req: NextRequest) {
+  // Silently accept webhooks if Stripe is not configured (e.g., in dev/sandbox mode)
+  if (!STRIPE_WEBHOOK_ENABLED || !stripe) {
+    return NextResponse.json({ received: true, sandbox: true });
+  }
+
   const body = await req.text();
   const sig = req.headers.get('stripe-signature');
 
