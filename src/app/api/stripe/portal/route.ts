@@ -3,10 +3,27 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import Stripe from 'stripe';
 import { prisma } from '@/lib/prisma';
+import { STRIPE_ENABLED, getStripeDisabledMessage } from '@/lib/stripe-config';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+// Never statically pre-render — Stripe key is only available at runtime.
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+const stripe = STRIPE_ENABLED ? new Stripe(process.env.STRIPE_SECRET_KEY!) : null;
+
+export async function POST(req: NextRequest) {
+  // Return friendly error if Stripe is not configured
+  if (!STRIPE_ENABLED || !stripe) {
+    return NextResponse.json(
+      { 
+        error: 'Stripe not configured',
+        message: getStripeDisabledMessage()
+      },
+      { status: 503 }
+    );
+  }
+
   const session = await getServerSession(authOptions);
   if (!session?.user?.email) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });

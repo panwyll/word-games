@@ -6,8 +6,17 @@ on:
   pull_request:
     branches: [main]
 
+# The build gate is enforced by the real Vercel deployment check, which the
+# Vercel GitHub app posts on every PR commit.  Set "Vercel" (or the deployment
+# check name shown in your PR) as a *required status check* in
+# Settings → Branches → Branch protection rules.
+#
+# This workflow only runs the E2E test suite, which builds the app itself via
+# the Playwright webServer config.
+
 jobs:
-  build-and-test:
+  e2e:
+    name: E2E tests (Playwright)
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -23,6 +32,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
       - name: Lint
         run: npm run lint
 
@@ -31,12 +43,17 @@ jobs:
 
       - name: Build
         run: npm run build
+        env:
+          # Mock environment variables required for build
+          DATABASE_URL: postgresql://user:password@localhost:5432/test
+          NEXTAUTH_SECRET: test-secret-for-ci-build-only-do-not-use-in-production
+          NEXTAUTH_URL: http://localhost:3000
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
       - name: Run Playwright tests
-        run: npm run test:e2e -- --project=chromium
+        run: npm run test:e2e -- --project=chromium --project=mobile-chrome
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4
@@ -46,6 +63,13 @@ jobs:
           path: playwright-report/
           retention-days: 30
 
+      - name: Upload screenshots
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: screenshots
+          path: test-results/
+          retention-days: 30
   check-vercel-deployment:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'

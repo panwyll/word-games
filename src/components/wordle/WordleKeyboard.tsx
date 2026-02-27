@@ -20,9 +20,9 @@ const stateColors: Record<string, string> = {
 
 export default function WordleKeyboard({ letterStates, onKey }: WordleKeyboardProps) {
   return (
-    <div className="flex flex-col gap-1.5 items-center">
+    <div className="flex flex-col gap-1.5 w-full max-w-lg">
       {ROWS.map((row, i) => (
-        <div key={i} className="flex gap-1.5">
+        <div key={i} className="flex gap-1.5 w-full">
           {row.map((key) => {
             const state = letterStates[key] || 'unused';
             const isWide = key === 'ENTER' || key === '⌫';
@@ -31,7 +31,7 @@ export default function WordleKeyboard({ letterStates, onKey }: WordleKeyboardPr
                 key={key}
                 data-key={key}
                 onClick={() => onKey(key)}
-                className={`${stateColors[state]} ${isWide ? 'px-3 text-xs' : 'w-9'} h-14 rounded font-bold uppercase transition-colors duration-200 hover:opacity-90 active:scale-95`}
+                className={`${stateColors[state]} ${isWide ? 'flex-[1.5] px-3 text-xs' : 'flex-1'} h-14 rounded font-bold uppercase transition-colors duration-200 hover:opacity-90 active:scale-95`}
               >
                 {key}
               </button>
