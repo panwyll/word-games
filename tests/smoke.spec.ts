@@ -8,6 +8,7 @@ test.describe('Smoke Tests', () => {
     await expect(page.getByRole('link', { name: /Wordle/ }).first()).toBeVisible();
     await expect(page.getByRole('link', { name: /Connections/ }).first()).toBeVisible();
     await expect(page.getByRole('link', { name: /Spelling Bee/ }).first()).toBeVisible();
+    await expect(page.getByRole('link', { name: /Letter Boxed/ }).first()).toBeVisible();
   });
 
   test('wordle page loads', async ({ page }) => {
@@ -23,5 +24,10 @@ test.describe('Smoke Tests', () => {
   test('spelling bee page loads', async ({ page }) => {
     await page.goto('/spelling-bee');
     await expect(page.getByRole('heading', { name: /Spelling Bee/i })).toBeVisible();
+  });
+
+  test('letter boxed page loads', async ({ page }) => {
+    await page.goto('/letter-boxed');
+    await expect(page.getByRole('heading', { name: 'Letter Boxed' })).toBeVisible();
   });
 });

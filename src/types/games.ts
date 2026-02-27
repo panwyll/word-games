@@ -29,3 +29,8 @@ export interface SpellingBeePuzzle {
   validWords: string[];
   pangrams: string[];
 }
+
+export interface LetterBoxedPuzzle {
+  sides: [string[], string[], string[], string[]]; // top, right, bottom, left - 3 letters each
+  validWords: string[];
+}
