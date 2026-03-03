@@ -7,7 +7,7 @@ export default function Home() {
       <div className="max-w-6xl mx-auto px-4 py-12">
         <div className="text-center mb-16">
           <h1 className="text-5xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            Word Games & Python Puzzles
+            PuzzleHub
           </h1>
           <p className="text-gray-600 dark:text-gray-300 text-xl mb-4">
             Daily word games and coding challenges. A new puzzle every day.

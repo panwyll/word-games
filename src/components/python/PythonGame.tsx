@@ -19,12 +19,15 @@ export default function PythonGame({ puzzle }: PythonGameProps) {
   const [activeTab, setActiveTab] = useState<'description' | 'hints' | 'solution'>('description');
 
   const handleSubmit = async (code: string) => {
-    // Simulate test execution
-    // In production, this would call a backend API
+    // Note: This is a client-side demo placeholder
+    // In production, code should be sent to a sandboxed backend for execution
+    // (e.g., using Pyodide in Web Workers, or a backend API with Docker/AWS Lambda)
     const results = validateSolution(code, puzzle);
     setTestResults(results);
     
-    // For demo purposes, mark as passed if code is substantial
+    // TEMPORARY: Simple validation for demonstration purposes only
+    // This just checks if code exists - it does NOT actually run the code
+    // Remove this block when implementing real code execution
     if (code.length > 50 && code.includes('def ')) {
       const simulatedResults = puzzle.testCases.map(tc => ({
         passed: true,

@@ -5,7 +5,7 @@ import SessionProvider from '@/components/SessionProvider';
 import AuthHeader from '@/components/AuthHeader';
 
 export const metadata: Metadata = {
-  title: 'Word Games & Python Puzzles',
+  title: 'PuzzleHub - Daily Puzzles & Learning',
   description: 'Daily word games and Python coding challenges - NYT word games meets LeetCode',
 };
 
