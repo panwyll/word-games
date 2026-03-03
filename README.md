@@ -12,6 +12,54 @@ Daily Python coding challenges and NYT-style word games - where LeetCode meets t
 - 🎨 **Modern UI**: Responsive design with Tailwind CSS
 - 🌙 **Dark Mode**: Automatic dark mode support
 
+## What Makes This Special?
+
+PuzzleHub combines the best of both worlds:
+
+- **NYT Word Games**: Daily word puzzles that are fun, engaging, and shareable
+- **LeetCode**: Structured coding challenges that teach algorithms and problem-solving
+
+### Daily Challenges
+
+Every day features:
+- 1 Python coding puzzle (with hints, test cases, and solutions)
+- 6 word game puzzles (Wordle, Connections, Spelling Bee, etc.)
+
+### Learning Hub
+
+- **Concept Pages**: Deep dives into algorithms and data structures
+- **Code Examples**: Real Python code with explanations
+- **Progressive Hints**: Learn without spoilers
+- **Solution Walkthroughs**: Understand the "why" behind solutions
+- **Practice Problems**: Linked puzzles for each concept
+
+## Python Coding Puzzles
+
+Our coding puzzles are designed for learning, not just testing:
+
+### Puzzle Structure
+- **Problem Statement**: Clear, concise description with examples
+- **Test Cases**: Multiple test cases with expected outputs
+- **Progressive Hints**: 3-tier hint system to guide without spoiling
+- **Solution & Explanation**: Not just the code, but the "why" and "how"
+- **Learning Points**: Key takeaways from each puzzle
+- **Related Concepts**: Links to learning resources
+
+### Categories Covered
+- Arrays & Strings
+- Hash Maps & Sets
+- Stacks & Queues
+- Binary Search
+- Dynamic Programming
+- Two Pointers
+- Greedy Algorithms
+- And more...
+
+### Difficulty Levels
+- **Easy**: Foundation problems for beginners
+- **Medium**: Intermediate challenges requiring multiple concepts
+- **Hard**: Advanced problems for experienced developers
+
 ## Quick Start
 
 ### Prerequisites
