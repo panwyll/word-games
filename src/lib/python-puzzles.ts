@@ -677,6 +677,215 @@ You must write an algorithm with O(log n) runtime complexity.`,
       'Logarithmic time complexity'
     ],
     relatedConcepts: ['Binary Search', 'Arrays', 'Divide and Conquer']
+  },
+  {
+    id: 'contains-duplicate',
+    title: 'Contains Duplicate',
+    difficulty: 'Easy',
+    category: 'Arrays',
+    description: `Given an integer array \`nums\`, return \`true\` if any value appears at least twice in the array, and return \`false\` if every element is distinct.`,
+    examples: [
+      {
+        input: 'nums = [1,2,3,1]',
+        expectedOutput: 'true',
+        explanation: '1 appears twice'
+      },
+      {
+        input: 'nums = [1,2,3,4]',
+        expectedOutput: 'false',
+        explanation: 'All elements are distinct'
+      }
+    ],
+    testCases: [
+      { input: '[1,2,3,1]', expectedOutput: 'true' },
+      { input: '[1,2,3,4]', expectedOutput: 'false' },
+      { input: '[1,1,1,3,3,4,3,2,4,2]', expectedOutput: 'true' },
+      { input: '[]', expectedOutput: 'false' },
+    ],
+    hints: [
+      'What data structure allows O(1) lookup?',
+      'Use a set to track numbers you\'ve seen',
+      'Return true as soon as you find a duplicate'
+    ],
+    solution: `def contains_duplicate(nums):
+    seen = set()
+    for num in nums:
+        if num in seen:
+            return True
+        seen.add(num)
+    return False`,
+    explanation: `This problem demonstrates efficient duplicate detection using a hash set.
+
+**Algorithm:**
+1. Create empty set to track seen numbers
+2. For each number in array:
+   - If number already in set: duplicate found, return True
+   - Otherwise: add number to set
+3. If loop completes, no duplicates found, return False
+
+**Alternative Approaches:**
+- Sort array and check adjacent elements: O(n log n) time, O(1) space
+- Nested loops (brute force): O(n²) time, O(1) space
+- Hash set (optimal): O(n) time, O(n) space
+
+**Time Complexity:** O(n) - single pass through array
+**Space Complexity:** O(n) - set storage in worst case`,
+    learningPoints: [
+      'Using sets for O(1) membership testing',
+      'Early return optimization',
+      'Trade-off between time and space complexity'
+    ],
+    relatedConcepts: ['Hash Sets', 'Arrays', 'Space-Time Tradeoffs']
+  },
+  {
+    id: 'find-minimum-rotated-array',
+    title: 'Find Minimum in Rotated Sorted Array',
+    difficulty: 'Medium',
+    category: 'Binary Search',
+    description: `Suppose an array of length \`n\` sorted in ascending order is rotated between \`1\` and \`n\` times.
+
+Given the sorted rotated array \`nums\` of unique elements, return the minimum element of this array.
+
+You must write an algorithm that runs in O(log n) time.`,
+    examples: [
+      {
+        input: 'nums = [3,4,5,1,2]',
+        expectedOutput: '1',
+        explanation: 'The original array was [1,2,3,4,5] rotated 3 times'
+      },
+      {
+        input: 'nums = [4,5,6,7,0,1,2]',
+        expectedOutput: '0',
+        explanation: 'The original array was [0,1,2,4,5,6,7] and it was rotated 4 times'
+      }
+    ],
+    testCases: [
+      { input: '[3,4,5,1,2]', expectedOutput: '1' },
+      { input: '[4,5,6,7,0,1,2]', expectedOutput: '0' },
+      { input: '[11,13,15,17]', expectedOutput: '11' },
+      { input: '[2,1]', expectedOutput: '1' },
+    ],
+    hints: [
+      'Can you modify binary search for this problem?',
+      'Compare middle element with the rightmost element',
+      'If mid > right, minimum is in right half; otherwise in left half'
+    ],
+    solution: `def find_min(nums):
+    left, right = 0, len(nums) - 1
+    
+    while left < right:
+        mid = (left + right) // 2
+        
+        # If mid element is greater than right element,
+        # minimum must be in right half
+        if nums[mid] > nums[right]:
+            left = mid + 1
+        else:
+            # Minimum is in left half (including mid)
+            right = mid
+    
+    return nums[left]`,
+    explanation: `This problem requires modified binary search to handle rotated arrays.
+
+**Key Insight:** In a rotated sorted array, one half is always sorted. By comparing the middle element with the rightmost element, we can determine which half contains the minimum.
+
+**Algorithm:**
+1. Use binary search with left and right pointers
+2. While left < right:
+   - Calculate mid = (left + right) // 2
+   - If nums[mid] > nums[right]: minimum is in right half (rotation point)
+   - Otherwise: minimum is in left half (including mid)
+3. Return nums[left]
+
+**Why it works:**
+- If nums[mid] > nums[right]: Array is rotated in the right half, minimum is there
+- If nums[mid] <= nums[right]: Left half contains the minimum
+
+**Time Complexity:** O(log n) - binary search
+**Space Complexity:** O(1) - only pointers`,
+    learningPoints: [
+      'Modified binary search for rotated arrays',
+      'Identifying which half to search',
+      'Maintaining O(log n) with rotation'
+    ],
+    relatedConcepts: ['Binary Search', 'Arrays', 'Rotated Arrays']
+  },
+  {
+    id: 'linked-list-cycle',
+    title: 'Linked List Cycle',
+    difficulty: 'Easy',
+    category: 'Linked List',
+    description: `Given \`head\`, the head of a linked list, determine if the linked list has a cycle in it.
+
+There is a cycle in a linked list if there is some node in the list that can be reached again by continuously following the \`next\` pointer.
+
+Return \`true\` if there is a cycle in the linked list. Otherwise, return \`false\`.`,
+    examples: [
+      {
+        input: 'head = [3,2,0,-4], pos = 1',
+        expectedOutput: 'true',
+        explanation: 'There is a cycle where the tail connects to the 2nd node (index 1)'
+      },
+      {
+        input: 'head = [1,2], pos = 0',
+        expectedOutput: 'true',
+        explanation: 'There is a cycle where the tail connects to the 1st node (index 0)'
+      },
+      {
+        input: 'head = [1], pos = -1',
+        expectedOutput: 'false',
+        explanation: 'There is no cycle in the linked list'
+      }
+    ],
+    testCases: [
+      { input: '[3,2,0,-4], pos=1', expectedOutput: 'true' },
+      { input: '[1,2], pos=0', expectedOutput: 'true' },
+      { input: '[1], pos=-1', expectedOutput: 'false' },
+      { input: '[1,2,3,4,5], pos=-1', expectedOutput: 'false' },
+    ],
+    hints: [
+      'Can you detect a cycle without using extra space?',
+      'Think about two runners on a circular track - one fast, one slow',
+      'Floyd\'s Cycle Detection Algorithm (Tortoise and Hare)'
+    ],
+    solution: `def has_cycle(head):
+    if not head or not head.next:
+        return False
+    
+    slow = head
+    fast = head.next
+    
+    while slow != fast:
+        if not fast or not fast.next:
+            return False
+        slow = slow.next
+        fast = fast.next.next
+    
+    return True`,
+    explanation: `This uses Floyd's Cycle Detection Algorithm (also called "Tortoise and Hare").
+
+**Algorithm:**
+1. Use two pointers: slow (moves 1 step) and fast (moves 2 steps)
+2. If there's a cycle, fast will eventually catch up to slow
+3. If there's no cycle, fast will reach the end (None)
+
+**Why it works:**
+- In a cycle, the fast pointer gains 1 position on slow per iteration
+- Eventually, they must meet if there's a cycle
+- If no cycle, fast reaches end first
+
+**Analogy:** Two runners on a circular track. If the fast runner laps the slow runner, there must be a cycle.
+
+**Time Complexity:** O(n) - at most n iterations before meeting or reaching end
+**Space Complexity:** O(1) - only two pointers
+
+**Note:** This is a classic algorithm interview question testing your knowledge of linked lists and cycle detection.`,
+    learningPoints: [
+      'Floyd\'s Cycle Detection Algorithm',
+      'Two-pointer technique (fast and slow)',
+      'O(1) space solution for cycle detection'
+    ],
+    relatedConcepts: ['Linked Lists', 'Two Pointers', 'Cycle Detection']
   }
 ];
 
