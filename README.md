@@ -1,10 +1,12 @@
-# word-games
+# PuzzleHub
 
-NYT-style word games: Wordle, Connections, and Spelling Bee with a freemium subscription model.
+Daily Python coding challenges and NYT-style word games - where LeetCode meets the New York Times.
 
 ## Features
 
-- 🎮 **Three Word Games**: Wordle, Connections, and Spelling Bee
+- 🐍 **Python Coding Puzzles**: Daily LeetCode-style challenges with test cases, hints, and detailed solutions
+- 📚 **Learning Resources**: Interactive tutorials on algorithms, data structures, and programming concepts
+- 🎮 **Six Word Games**: Wordle, Connections, Spelling Bee, Letter Boxed, Sudoku, and Crossword
 - 🔐 **User Authentication**: Sign up and track your progress
 - 💳 **Freemium Model**: Free daily puzzles with premium archive access
 - 🎨 **Modern UI**: Responsive design with Tailwind CSS
